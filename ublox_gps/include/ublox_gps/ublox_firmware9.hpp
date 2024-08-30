@@ -9,6 +9,7 @@
 
 #include <ublox_msgs/msg/cfg_valset.hpp>
 #include <ublox_msgs/msg/cfg_valset_cfgdata.hpp>
+#include <ublox_msgs/msg/nav_pl.hpp>
 
 #include <ublox_gps/fix_diagnostic.hpp>
 #include <ublox_gps/gnss.hpp>
@@ -34,13 +35,24 @@ public:
     */
   bool configureUblox(std::shared_ptr<ublox_gps::Gps> gps) override;
 
+  /**
+   * @brief Subscribe to u-blox messages which are not generic to all firmware
+   * versions.
+   *
+   * @details Subscribe to NavPVT, NavSAT, MonHW, and RxmRTCM messages based
+   * on user settings.
+   */
+  void subscribe(std::shared_ptr<ublox_gps::Gps> gps) override;
+
 private:
   /**
     * @brief Populate the CfgVALSETCfgData data type
     *
-    * @details A helper function used to generate a configuration for a single signal. 
+    * @details A helper function used to generate a configuration for a single signal.
     */
   ublox_msgs::msg::CfgVALSETCfgdata generateSignalConfig(uint32_t signalID, bool enable);
+
+  rclcpp::Publisher<ublox_msgs::msg::NavPL>::SharedPtr nav_pl_pub_;
 };
 
 }  // namespace ublox_node

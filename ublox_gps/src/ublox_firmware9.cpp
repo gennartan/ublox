@@ -15,6 +15,9 @@ namespace ublox_node {
 UbloxFirmware9::UbloxFirmware9(const std::string & frame_id, std::shared_ptr<diagnostic_updater::Updater> updater, std::shared_ptr<FixDiagnostic> freq_diag, std::shared_ptr<Gnss> gnss, rclcpp::Node* node)
   : UbloxFirmware8(frame_id, updater, freq_diag, gnss, node)
 {
+  if (getRosBoolean(node_, "publish.nav.pl")) {
+    nav_pl_pub_ = node_->create_publisher<ublox_msgs::msg::NavPL>("navpl", 1);
+  }
 }
 
 bool UbloxFirmware9::configureUblox(std::shared_ptr<ublox_gps::Gps> gps)
@@ -107,6 +110,17 @@ bool UbloxFirmware9::configureUblox(std::shared_ptr<ublox_gps::Gps> gps)
   }
 
   return true;
+}
+
+void UbloxFirmware9::subscribe(std::shared_ptr<ublox_gps::Gps> gps)
+{
+  UbloxFirmware8::subscribe(gps);
+
+  // Subscribe to Nav PL
+  if (getRosBoolean(node_, "publish.nav.pl")) {
+    gps->subscribe<ublox_msgs::msg::NavPL>([this](const ublox_msgs::msg::NavPL &m) { nav_pl_pub_->publish(m); },
+                                        1);
+  }
 }
 
 ublox_msgs::msg::CfgVALSETCfgdata UbloxFirmware9::generateSignalConfig(uint32_t signalID, bool enable)
